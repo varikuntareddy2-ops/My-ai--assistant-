@@ -1,0 +1,151 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>JARVIS AI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #050505;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .jarvis {
+      width: 100%;
+      max-width: 500px;
+      min-height: 100vh;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h1 {
+      font-size: 42px;
+      letter-spacing: 5px;
+      margin-bottom: 10px;
+    }
+
+    .status {
+      color: #00eaff;
+      margin-bottom: 40px;
+    }
+
+    .orb {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 3px solid #00eaff;
+      box-shadow:
+        0 0 20px #00eaff,
+        0 0 50px #006eff,
+        inset 0 0 30px #00eaff;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      animation: pulse 2s infinite;
+    }
+
+    .orb span {
+      font-size: 50px;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.08);
+      }
+    }
+
+    .response {
+      width: 100%;
+      min-height: 80px;
+      margin-top: 40px;
+      padding: 20px;
+      border: 1px solid #222;
+      border-radius: 15px;
+      background: #0d0d0d;
+      text-align: center;
+      color: #ddd;
+    }
+
+    .mic {
+      margin-top: 25px;
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      border: none;
+      background: #00aaff;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 25px #00aaff;
+    }
+
+    .mic:active {
+      transform: scale(0.9);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="jarvis">
+
+    <h1>JARVIS</h1>
+
+    <div class="status" id="status">
+      SYSTEM ONLINE
+    </div>
+
+    <div class="orb">
+      <span>◉</span>
+    </div>
+
+    <div class="response" id="response">
+      Hello! I am JARVIS. Tap the microphone.
+    </div>
+
+    <button class="mic" onclick="startListening()">
+      🎤
+    </button>
+
+  </div>
+
+  <script>
+
+    function startListening() {
+
+      document.getElementById("status").innerText =
+        "LISTENING...";
+
+      document.getElementById("response").innerText =
+        "I am listening...";
+
+    }
+
+  </script>
+
+</body>
+</html>
+```
