@@ -1,61 +1,306 @@
-recognition.onresult = (event) => {
+```javascript
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  let transcript = "";
+const micButton = document.getElementById("mic");
+const statusText = document.getElementById("status");
+const outputText = document.getElementById("text");
 
-  for (let i = event.resultIndex; i < event.results.length; i++) {
-    transcript += event.results[i][0].transcript;
+if (!SpeechRecognition) {
+
+  statusText.innerText =
+    "❌ Speech recognition not supported. Please use Chrome.";
+
+} else {
+
+  let recognition = new SpeechRecognition();
+
+  recognition.lang = "en-IN";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+
+  let listening = false;
+  let jarvisActive = false;
+
+  // 🎤 Start listening
+  micButton.onclick = () => {
+
+    if (!listening) {
+
+      startListening();
+
+    } else {
+
+      stopListening();
+
+    }
+  };
+
+  function startListening() {
+
+    try {
+
+      recognition.start();
+
+      listening = true;
+
+      micButton.classList.add("listening");
+      statusText.innerText = "🎤 Listening...";
+
+      outputText.innerText =
+        "Say: Hey Jarvis";
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
   }
 
-  transcript = transcript.toLowerCase().trim();
+  function stopListening() {
 
-  outputText.innerText = "Heard: " + transcript;
+    listening = false;
+    jarvisActive = false;
 
-  // Wake word
-  if (
-    transcript.includes("hey jarvis") ||
-    transcript.includes("hey jarvis")
-  ) {
+    try {
+      recognition.stop();
+    } catch (e) {}
 
-    statusText.innerText = "🤖 Yes, I'm listening...";
+    micButton.classList.remove("listening");
 
-    speak("Yes, I'm listening. What do you need?");
+    statusText.innerText =
+      "Tap the mic 🎤";
 
-    return;
+    outputText.innerText =
+      "Listening stopped.";
   }
 
-  // Commands after wake word
-  if (transcript.includes("open youtube")) {
+  // 🎧 Voice received
+  recognition.onresult = (event) => {
 
-    speak("Opening YouTube");
+    const result =
+      event.results[event.results.length - 1];
 
-    setTimeout(() => {
-      window.open("https://www.youtube.com", "_blank");
-    }, 1000);
+    if (!result.isFinal) return;
 
+    const command =
+      result[0].transcript
+      .toLowerCase()
+      .trim();
+
+    console.log("Heard:", command);
+
+    outputText.innerText =
+      "You: " + command;
+
+
+    // 🤖 WAKE WORD
+    if (
+      command.includes("hey jarvis") ||
+      command.includes("hey jarvis")
+    ) {
+
+      jarvisActive = true;
+
+      statusText.innerText =
+        "🤖 Jarvis is listening...";
+
+      speak(
+        "Yes, I'm listening. What do you need?"
+      );
+
+      return;
+    }
+
+
+    // 🛑 Ignore commands until Jarvis is activated
+    if (!jarvisActive) {
+
+      statusText.innerText =
+        "🎤 Waiting for Hey Jarvis...";
+
+      return;
+    }
+
+
+    // ⏰ TIME
+    if (
+      command.includes("what time") ||
+      command.includes("time")
+    ) {
+
+      const time =
+        new Date().toLocaleTimeString();
+
+      speak(
+        "The time is " + time
+      );
+
+      jarvisActive = false;
+
+    }
+
+
+    // ▶️ YOUTUBE
+    else if (
+      command.includes("open youtube") ||
+      command.includes("youtube")
+    ) {
+
+      speak("Opening YouTube");
+
+      jarvisActive = false;
+
+      setTimeout(() => {
+
+        window.open(
+          "https://www.youtube.com",
+          "_blank"
+        );
+
+      }, 1200);
+
+    }
+
+
+    // 🌐 GOOGLE
+    else if (
+      command.includes("open google") ||
+      command.includes("google")
+    ) {
+
+      speak("Opening Google");
+
+      jarvisActive = false;
+
+      setTimeout(() => {
+
+        window.open(
+          "https://www.google.com",
+          "_blank"
+        );
+
+      }, 1200);
+
+    }
+
+
+    // 👋 HELLO
+    else if (
+      command.includes("hello") ||
+      command.includes("hi")
+    ) {
+
+      speak(
+        "Hello! How can I help you?"
+      );
+
+      jarvisActive = false;
+
+    }
+
+
+    // 🛑 STOP
+    else if (
+      command.includes("stop listening") ||
+      command.includes("stop")
+    ) {
+
+      speak("Okay. I am stopping.");
+
+      stopListening();
+
+    }
+
+
+    // ❓ UNKNOWN
+    else {
+
+      speak(
+        "I heard you say " +
+        command +
+        ". I don't know that command yet."
+      );
+
+      jarvisActive = false;
+    }
+  };
+
+
+  // 🔄 Recognition stopped
+  recognition.onend = () => {
+
+    if (listening) {
+
+      try {
+
+        recognition.start();
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+
+    }
+  };
+
+
+  // ❌ Error
+  recognition.onerror = (event) => {
+
+    console.log(
+      "Speech error:",
+      event.error
+    );
+
+    if (event.error === "not-allowed") {
+
+      statusText.innerText =
+        "❌ Microphone permission denied.";
+
+      listening = false;
+
+      micButton.classList.remove(
+        "listening"
+      );
+
+    }
+
+    else if (event.error === "no-speech") {
+
+      statusText.innerText =
+        "🎤 Still listening...";
+
+    }
+
+    else {
+
+      statusText.innerText =
+        "❌ Error: " + event.error;
+    }
+  };
+
+
+  // 🔊 Voice response
+  function speak(message) {
+
+    outputText.innerText =
+      "Jarvis: " + message;
+
+    const speech =
+      new SpeechSynthesisUtterance(message);
+
+    speech.lang = "en-IN";
+    speech.rate = 1;
+    speech.pitch = 1;
+
+    window.speechSynthesis.cancel();
+
+    window.speechSynthesis.speak(
+      speech
+    );
   }
 
-  else if (transcript.includes("open google")) {
-
-    speak("Opening Google");
-
-    setTimeout(() => {
-      window.open("https://www.google.com", "_blank");
-    }, 1000);
-
-  }
-
-  else if (transcript.includes("what time is it")) {
-
-    const time = new Date().toLocaleTimeString();
-
-    speak("The time is " + time);
-
-  }
-
-  else if (transcript.includes("hello")) {
-
-    speak("Hello! How can I help you?");
-
-  }
-
-};
+}
+```
