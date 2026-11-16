@@ -1,61 +1,274 @@
-recognition.onresult = (event) => {
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My AI Assistant</title>
 
-  let transcript = "";
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-  for (let i = event.resultIndex; i < event.results.length; i++) {
-    transcript += event.results[i][0].transcript;
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0b0f19;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .assistant {
+      width: 92%;
+      max-width: 420px;
+      text-align: center;
+      padding: 30px 20px;
+      border-radius: 25px;
+      background: #151b29;
+      box-shadow: 0 0 30px rgba(0, 200, 255, 0.15);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    #status {
+      color: #00d9ff;
+      margin: 15px 0;
+      min-height: 25px;
+    }
+
+    #text {
+      min-height: 60px;
+      padding: 15px;
+      border-radius: 15px;
+      background: #0d1320;
+      margin-bottom: 20px;
+    }
+
+    button {
+      width: 90px;
+      height: 90px;
+      border: none;
+      border-radius: 50%;
+      background: #00aaff;
+      color: white;
+      font-size: 35px;
+      cursor: pointer;
+    }
+
+    button.listening {
+      background: #ff3158;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+
+    .commands {
+      margin-top: 25px;
+      color: #aaa;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="assistant">
+    <h1>🤖 My AI Assistant</h1>
+
+    <div id="status">Tap the mic 🎤</div>
+
+    <div id="text">
+      Say something...
+    </div>
+
+    <button id="mic">🎤</button>
+
+    <div class="commands">
+      Try saying:<br>
+      "Hello"<br>
+      "What time is it"<br>
+      "Open YouTube"<br>
+      "Open Google"<br>
+      "Stop listening"
+    </div>
+  </div>
+
+<script>
+
+const micButton = document.getElementById("mic");
+const statusText = document.getElementById("status");
+const outputText = document.getElementById("text");
+
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {
+
+  statusText.innerText =
+    "❌ Speech recognition not supported. Try Chrome.";
+
+} else {
+
+  const recognition = new SpeechRecognition();
+
+  recognition.lang = "en-IN";
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  let listening = false;
+
+  micButton.onclick = () => {
+
+    if (listening) {
+      recognition.stop();
+      return;
+    }
+
+    startListening();
+  };
+
+  function startListening() {
+
+    try {
+      recognition.start();
+
+      listening = true;
+
+      micButton.classList.add("listening");
+      statusText.innerText = "🎤 Listening...";
+      outputText.innerText = "Speak now...";
+    }
+
+    catch (error) {
+      console.log(error);
+    }
   }
 
-  transcript = transcript.toLowerCase().trim();
+  recognition.onresult = (event) => {
 
-  outputText.innerText = "Heard: " + transcript;
+    const command =
+      event.results[0][0].transcript.toLowerCase();
 
-  // Wake word
-  if (
-    transcript.includes("hey jarvis") ||
-    transcript.includes("hey jarvis")
-  ) {
+    outputText.innerText = "You: " + command;
 
-    statusText.innerText = "🤖 Yes, I'm listening...";
+    processCommand(command);
+  };
 
-    speak("Yes, I'm listening. What do you need?");
+  recognition.onend = () => {
 
-    return;
+    listening = false;
+
+    micButton.classList.remove("listening");
+
+    statusText.innerText = "Tap the mic 🎤";
+  };
+
+  recognition.onerror = (event) => {
+
+    listening = false;
+
+    micButton.classList.remove("listening");
+
+    statusText.innerText =
+      "❌ Mic error: " + event.error;
+  };
+
+  function speak(message) {
+
+    outputText.innerText = "Assistant: " + message;
+
+    const speech = new SpeechSynthesisUtterance(message);
+
+    speech.lang = "en-IN";
+    speech.rate = 1;
+    speech.pitch = 1;
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(speech);
   }
 
-  // Commands after wake word
-  if (transcript.includes("open youtube")) {
+  function processCommand(command) {
 
-    speak("Opening YouTube");
+    if (
+      command.includes("hello") ||
+      command.includes("hi")
+    ) {
 
-    setTimeout(() => {
-      window.open("https://www.youtube.com", "_blank");
-    }, 1000);
+      speak("Hello! How can I help you?");
+    }
 
+    else if (
+      command.includes("time")
+    ) {
+
+      const time =
+        new Date().toLocaleTimeString();
+
+      speak("The time is " + time);
+    }
+
+    else if (
+      command.includes("open youtube")
+    ) {
+
+      speak("Opening YouTube");
+
+      setTimeout(() => {
+        window.open(
+          "https://www.youtube.com",
+          "_blank"
+        );
+      }, 1000);
+    }
+
+    else if (
+      command.includes("open google")
+    ) {
+
+      speak("Opening Google");
+
+      setTimeout(() => {
+        window.open(
+          "https://www.google.com",
+          "_blank"
+        );
+      }, 1000);
+    }
+
+    else if (
+      command.includes("stop listening")
+    ) {
+
+      speak("Okay, stopping.");
+
+      recognition.stop();
+    }
+
+    else {
+
+      speak(
+        "I heard " +
+        command +
+        ". I don't know that command yet."
+      );
+    }
   }
+}
 
-  else if (transcript.includes("open google")) {
+</script>
 
-    speak("Opening Google");
-
-    setTimeout(() => {
-      window.open("https://www.google.com", "_blank");
-    }, 1000);
-
-  }
-
-  else if (transcript.includes("what time is it")) {
-
-    const time = new Date().toLocaleTimeString();
-
-    speak("The time is " + time);
-
-  }
-
-  else if (transcript.includes("hello")) {
-
-    speak("Hello! How can I help you?");
-
-  }
-
-};
+</body>
+</html>
+```
